@@ -120,6 +120,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (BOOL)shouldRenderAsCluster:(id<GMUCluster>)cluster atZoom:(float)zoom;
 
+- (BOOL)shouldRenderAsClusterForAnimation:(id <GMUCluster>)cluster atZoom:(float)zoom;
+
+- (BOOL)shouldRenderClusters:(float)previousZoom currentZoom:(float)currentZoom;
+
 @end
 
 NS_ASSUME_NONNULL_END

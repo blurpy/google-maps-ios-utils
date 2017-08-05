@@ -85,14 +85,31 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
   return cluster.count >= kGMUMinClusterSize && zoom <= kGMUMaxClusterZoom;
 }
 
+- (BOOL)shouldRenderAsClusterForAnimation:(id <GMUCluster>)cluster atZoom:(float)zoom {
+  return cluster.count >= kGMUMinClusterSize && zoom <= kGMUMaxClusterZoom;
+}
+
+- (BOOL)shouldRenderClusters:(float)previousZoom currentZoom:(float)currentZoom {
+  return true;
+}
+
 #pragma mark GMUClusterRenderer
 
 - (void)renderClusters:(NSArray<id<GMUCluster>> *)clusters {
+  float zoom = _mapView.camera.zoom;
+  BOOL isZoomingIn = zoom > _previousZoom;
+  BOOL shouldRenderClusters = [self shouldRenderClusters:_previousZoom currentZoom:zoom];
+  _previousZoom = zoom;
+
+  if (!shouldRenderClusters) {
+    return;
+  }
+
   [_renderedClusters removeAllObjects];
   [_renderedClusterItems removeAllObjects];
 
   if (_animatesClusters) {
-    [self renderAnimatedClusters:clusters];
+    [self renderAnimatedClusters:clusters isZoomingIn:isZoomingIn];
   } else {
     // No animation, just remove existing markers and add new ones.
     _clusters = [clusters copy];
@@ -102,11 +119,7 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
   }
 }
 
-- (void)renderAnimatedClusters:(NSArray<id<GMUCluster>> *)clusters {
-  float zoom = _mapView.camera.zoom;
-  BOOL isZoomingIn = zoom > _previousZoom;
-  _previousZoom = zoom;
-
+- (void)renderAnimatedClusters:(NSArray<id<GMUCluster>> *)clusters isZoomingIn:(BOOL)isZoomingIn {
   [self prepareClustersForAnimation:clusters isZoomingIn:isZoomingIn];
 
   _clusters = [clusters copy];
@@ -247,7 +260,7 @@ static const double kGMUAnimationDuration = 0.5;  // seconds.
 
 - (void)renderCluster:(id<GMUCluster>)cluster animated:(BOOL)animated {
   float zoom = _mapView.camera.zoom;
-  if ([self shouldRenderAsCluster:cluster atZoom:zoom]) {
+  if ([self shouldRenderAsClusterForAnimation:cluster atZoom:zoom]) {
     CLLocationCoordinate2D fromPosition = kCLLocationCoordinate2DInvalid;
     if (animated) {
       id<GMUCluster> fromCluster =
